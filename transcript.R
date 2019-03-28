@@ -128,7 +128,7 @@ mlp_eln
 mlp_eln_test<-predict(mlp_eln,testing)
 
 ####################support vector regression########
-
+library(caret)
 myGrid<-expand.grid(alpha=0:1,lambda=seq(0.001,0.1,length=10))
 svr<-train(crim~.,data=training, method='svmRadialSigma',trControl=myControl,preProcess=c('center','scale'),tuneLength=10)
 
@@ -163,3 +163,5 @@ ridge.coef=predict(ridge,lambda=bestlambda,type='coefficient')
 ridge.coef
 
 #https://data.gov.uk/dataset/cb7ae6f0-4be6-4935-9277-47e5ce24a11f/road-safety-data
+#SVR for boston
+#
