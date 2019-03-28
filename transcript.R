@@ -28,7 +28,7 @@ myControl<-trainControl(method='cv',number=10,verboseIter = T)
 
 #################ridge regression####################
 myGrid<-expand.grid(alpha=0,lambda=seq(0.0001,1,length=10))
-ridge<-train(medv~., 
+ridge<-train(crim~., 
                     data=training,
                     method='glmnet',
                     preProcess=c('center','scale'),
@@ -46,7 +46,7 @@ plot(varImp(ridge))  # the importance rank of variables
 ###############lasso regression####################
 set.seed(3)
 myGrid2<-expand.grid(alpha=1,lambda=seq(0.0001,1,length=10))
-lasso<-train(medv~., 
+lasso<-train(crim~., 
              data=training,
              method='glmnet',
              preProcess=c('center','scale'),
@@ -64,7 +64,7 @@ plot(lasso$finalModel,xvar='dev',label=TRUE)   ##right side: overfitting occurs
 set.seed(4)
 myGrid3<-expand.grid(alpha=seq(0,1,length=10),lambda=seq(0.0001,0.2,length=5))
 #alpha=0:1: choose 0 or 1
-ElasticNet<-train(medv~., 
+ElasticNet<-train(crim~., 
              data=training,
              method='glmnet',
              preProcess=c('center','scale'),
