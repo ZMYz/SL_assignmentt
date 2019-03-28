@@ -42,6 +42,7 @@ plot(ridge)
 plot(ridge$finalModel,xvar='lambda',label=TRUE)  #increasing lambda helps to reduce the size of coefficients
 plot(varImp(ridge))  # the importance rank of variables
 
+###remove insignificant predictors and rerun the model, and compare
 ###############lasso regression####################
 set.seed(3)
 myGrid2<-expand.grid(alpha=1,lambda=seq(0.0001,1,length=10))
@@ -57,6 +58,7 @@ lasso_test<-predict(lasso,testing)
 plot(lasso)
 plot(lasso$finalModel,xvar='lambda',label=TRUE)
 plot(lasso$finalModel,xvar='dev',label=TRUE)   ##right side: overfitting occurs
+# check what does it mean
 
 #############Elastic Net######################
 set.seed(4)
@@ -111,6 +113,8 @@ mlp_l1<-autoencoder(training,hidden.layers = 3,standardize = T,L1=1,verbose=T)
 #at layers = 3, get the minimal
 mlp_l1
 mlp_l1_test<-predict(mlp_l1,testing)
+#best layers
+#weight
 
 #############L2 regularization
 mlp_l2<-autoencoder(training,hidden.layers = 1,standardize = T,L2=1,verbose=T)
@@ -158,3 +162,4 @@ mean((ridge.pred-y.test)^2)
 ridge.coef=predict(ridge,lambda=bestlambda,type='coefficient')
 ridge.coef
 
+#https://data.gov.uk/dataset/cb7ae6f0-4be6-4935-9277-47e5ce24a11f/road-safety-data
