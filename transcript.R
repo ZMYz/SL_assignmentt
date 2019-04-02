@@ -92,41 +92,32 @@ bwplot(resamples,metric="RMSE")
 dotplot(resamples,metric='RMSE')
 
 ####################Multiple Layer perceptron############
-################L1 regularization
-library(snnR)
+mlp_10cv<-function(data,l1,l2,hiddenlayers,learnrate,iterations){
+  score=list()
+  data<-data[sample(nrow(data)),]
+  folds<-cut(seq(1,nrow(data)),breaks=10,label=F)
+  for(i in 1:10){
+    testindex<-which(folds==i,arr.ind=T)
+    test<-data[testindex,]
+    train<-data[-testindex,]
+    ytrain<-train$crim
+    xtrain<-model.matrix(crim~.,data=train)[,-1]
+    ytest<-test$crim
+    xtest<-model.matrix(crim~.,data=test)[,-1]
+    mlp_l1<-neuralnetwork(xtrain,ytrain,hidden.layers = hiddenlayers,regression=T,loss.type='squared',standardize = T,L1=l1,L2=l2,learn.rates=learnrate,verbose=T,val.prop=0.2,n.epochs = iterations)
+    mlp_l1_test<-predict(mlp_l1,xtest)
+    pred<-unlist(mlp_l1_test) #convert into vector
+    score[[i]]=RMSE(ytest,pred)
 
-y=training$crim
-x=model.matrix(crim~.,training)[,-1]
-nHidden <- matrix(c(5,5,15,5,5),1,5)
-l1_mlp<-snnR(x,y,
-             nHidden=nHidden,
-             normalize=TRUE,
-             verbose=TRUE,
-             lambda=c(0.001,0.01,0.1,1))
+  }
+  score<-unlist(score)
+  meanRMSE<-mean(score)
+  return(score)
+}
 
-l1_mlp_test<-predict(l1_mlp,testing)
-l1_mlp$Mse
+mlp_10cv(boston,0,1,1,0.01,75)
 
-###############L1 regularization
-library(ANN2)
-mlp_l1<-autoencoder(training,hidden.layers = 3,standardize = T,L1=1,verbose=T)
-#at layers = 3, get the minimal
-mlp_l1
-mlp_l1_test<-predict(mlp_l1,testing)
-#best layers
-#weight
-
-#############L2 regularization
-mlp_l2<-autoencoder(training,hidden.layers = 1,standardize = T,L2=1,verbose=T)
-#at layers = 1, get the minimal
-mlp_l2
-mlp_l2_test<-predict(mlp_l2,testing)
-##############elastic net
-mlp_eln<-autoencoder(training,hidden.layers = 1,standardize = T,L1=0.6,L2=0.4,verbose=T)
-#at layers = 1, get the minimal
-mlp_eln
-mlp_eln_test<-predict(mlp_eln,testing)
-
+#this function adds 10-fold cv with MLP together, and we can check the RMSE for the test set.
 ####################support vector regression########
 library(caret)
 myGrid<-expand.grid(alpha=0:1,lambda=seq(0.001,0.1,length=10))
