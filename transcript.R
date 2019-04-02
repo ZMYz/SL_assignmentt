@@ -104,7 +104,7 @@ mlp_10cv<-function(data,l1,l2,hiddenlayers,learnrate,iterations){
     xtrain<-model.matrix(crim~.,data=train)[,-1]
     ytest<-test$crim
     xtest<-model.matrix(crim~.,data=test)[,-1]
-    mlp_l1<-neuralnetwork(xtrain,ytrain,hidden.layers = hiddenlayers,regression=T,loss.type='squared',standardize = T,L1=l1,L2=l2,learn.rates=learnrate,verbose=T,val.prop=0.2,n.epochs = iterations)
+    mlp_l1<-neuralnetwork(xtrain,ytrain,hidden.layers = hiddenlayers,regression=T,loss.type='squared',standardize = T,L1=l1,L2=l2,learn.rates=learnrate,verbose=F,val.prop=0.2,n.epochs = iterations)
     mlp_l1_test<-predict(mlp_l1,xtest)
     pred<-unlist(mlp_l1_test) #convert into vector
     score[[i]]=RMSE(ytest,pred)
@@ -112,7 +112,7 @@ mlp_10cv<-function(data,l1,l2,hiddenlayers,learnrate,iterations){
   }
   score<-unlist(score)
   meanRMSE<-mean(score)
-  return(score)
+  return(mean(score))
 }
 
 mlp_10cv(boston,0,1,1,0.01,75)
