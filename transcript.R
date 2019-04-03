@@ -155,4 +155,7 @@ ridge.coef
 
 #https://data.gov.uk/dataset/cb7ae6f0-4be6-4935-9277-47e5ce24a11f/road-safety-data
 #SVR for boston
-#
+# New dataset: 
+# https://www.kaggle.com/muonneutrino/us-census-demographic-data: just few N/A values, have the income column with continuous value which could use for regression               
+# https://www.kaggle.com/karangadiya/fifa19             : some N/A values, too much variables
+ 
