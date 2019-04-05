@@ -1,4 +1,6 @@
 #load data
+install.packages("MASS")
+install.packages("ISLR")
 library(MASS)
 library(ISLR)
 #data() # show all the datasets we have
@@ -8,10 +10,14 @@ str(Boston)  #check the type of data
 names(Boston)  # variables/cols
 
 install.packages('ggplot2')
+install.packages("lattice")
+install.packages("caret")
+install.packages("kernlab")
 library(ggplot2)
 library(lattice)
 library(caret)
 library(kernlab)
+
 set.seed(1)
 intrain<-createDataPartition(y=Boston$crim,p=0.8,list=FALSE)
 training<-Boston[intrain,]
@@ -21,10 +27,11 @@ dim(testing)
 anyNA(Boston)
 
 ###################regularization#####################
+install.packages("Matrix")
 library(Matrix)
 
 set.seed(2)
-myControl<-trainControl(method='cv',number=10,verboseIter = T)
+myControl<-trainControl(method='cv',number=10,verboseIter = T)  # do we need to adjust the repeat time? increase the repeat time for k-fold
 
 #################ridge regression####################
 myGrid<-expand.grid(alpha=0,lambda=seq(0.0001,1,length=10))
@@ -43,6 +50,20 @@ plot(ridge$finalModel,xvar='lambda',label=TRUE)  #increasing lambda helps to red
 plot(varImp(ridge))  # the importance rank of variables
 
 ###remove insignificant predictors and rerun the model, and compare
+ridge2<-train(crim~.-age - chas, 
+             data=training,
+             method='glmnet',
+             preProcess=c('center','scale'),
+             tuneGrid=myGrid,
+             trControl=myControl)
+ridge_test2<-predict(ridge,newdata=testing)
+
+ridge2
+plot(ridge2)
+plot(ridge2$finalModel,xvar='lambda',label=TRUE)  #increasing lambda helps to reduce the size of coefficients
+plot(varImp(ridge2))  # the importance rank of variables
+# RMSE decreases when remove redundance variables
+
 ###############lasso regression####################
 set.seed(3)
 myGrid2<-expand.grid(alpha=1,lambda=seq(0.0001,1,length=10))
@@ -58,6 +79,8 @@ lasso_test<-predict(lasso,testing)
 plot(lasso)
 plot(lasso$finalModel,xvar='lambda',label=TRUE)
 plot(lasso$finalModel,xvar='dev',label=TRUE)   ##right side: overfitting occurs
+
+plot(varImp(lasso))
 # check what does it mean
 
 #############Elastic Net######################
