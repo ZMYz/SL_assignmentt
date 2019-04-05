@@ -31,7 +31,10 @@ install.packages("Matrix")
 library(Matrix)
 
 set.seed(2)
-myControl<-trainControl(method='cv',number=10,verboseIter = T)  # do we need to adjust the repeat time? increase the repeat time for k-fold
+myControl<-trainControl(method='cv',number=10,verboseIter = F)
+
+#repeated cv is for elastic net linear regression
+myControl2<-trainControl(method='repeatedcv',number=10,repeats=10,verboseIter = F)
 
 #################ridge regression####################
 myGrid<-expand.grid(alpha=0,lambda=seq(0.0001,1,length=10))
@@ -140,43 +143,45 @@ mlp_10cv<-function(data,l1,l2,hiddenlayers,learnrate,iterations){
   return(mean(score))
 }
 
-mlp_10cv(boston,0,1,1,0.01,75)
+#no regularisation
+set.seed(111)
+rmse_mlp<-mlp_10cv(Boston,0,0,2,0.01,75)
+#l1-lasso regularisation
+set.seed(222)
+rmse_l1_mlp<-mlp_10cv(Boston,1,0,2,0.01,75)
+#l2-ridge regularisation
+set.seed(333)
+rmse_l2_mlp<-mlp_10cv(Boston,0,1,1,0.01,75)
+#Elastic net
+set.seed(444)
+rmse_en_mlp<-mlp_10cv(Boston,1,1,1,0.01,75)
 
 #this function adds 10-fold cv with MLP together, and we can check the RMSE for the test set.
+
 ####################support vector regression########
-library(caret)
-myGrid<-expand.grid(alpha=0:1,lambda=seq(0.001,0.1,length=10))
-svr<-train(crim~.,data=training, method='svmRadialSigma',trControl=myControl,preProcess=c('center','scale'),tuneLength=10)
+#no-regularisation
+svr_nr<-train(crim~.,
+              data=training,
+              method='svmRadial',
+              preProcess=c('center','scale'),
+              trControl=myControl)
 
-test_pred<-predict(svr,newdata=testing)
-test_pred
+svr_nr_test<-predict(svr_nr,testing)
+rmse<-mean(svr_nr$resample$RMSE)
 
-plot(test_pred)
-plot(testing$crim)
-#out-of-sample RMSE
-sqrt(mean((testing$crim-test_pred)^2))
+#L2
+library(LiblineaR)
+svr<-LiblineaR(x_training, y_training,svr_eps=0.5,type=11,cross=0,verbose=T)
+pred_SVR<-predict(svr,newx = x_testing)
 
+mse<-LiblineaR(x_training, y_training,svr_eps=0.5,type=11,cross=10,verbose=T)
+rmse_l2_svr<-sqrt(mse)
 
-#ridge regression
-library(glmnet)
-x=model.matrix(crim~.,data=boston)[,-1]
-y=boston$crim
-set.seed(3)
-train=sample(1:nrow(x),3*nrow(x)/4)
-test=(-train)
-y.test=y[test]
-
-cv.out=cv.glmnet(x[train,],y[train],alpha=0)
-plot(cv.out)
-bestlambda=cv.out$lambda.min
-bestlambda
-
-ridge=glmnet(x[train,],y[train],alpha=0,lambda=bestlambda)
-ridge.pred=predict(ridge,lambda=bestlambda,x[test,])
-mean((ridge.pred-y.test)^2)
-
-ridge.coef=predict(ridge,lambda=bestlambda,type='coefficient')
-ridge.coef
+#check the average RMSE of different techniques
+Performance<-matrix(data=c(RMSE_lm,RMSE_lasso,RMSE_ridge,RMSE_Eln,rmse_svr_nr,rmse_l2_svr,rmse_mlp,rmse_l1_mlp,rmse_l2_mlp,rmse_en_mlp),ncol=1)
+rownames(Performance)<-c('LinearRegres','LinearLasso','LinearRidge','LinearElastic','SVM','SVMl2','MLP','MLPl1','MLPl2','MLPElastic')
+colnames(Performance)<-c('RMSE')
+Performance
 
 #https://data.gov.uk/dataset/cb7ae6f0-4be6-4935-9277-47e5ce24a11f/road-safety-data
 #SVR for boston
