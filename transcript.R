@@ -131,10 +131,9 @@ library(ANN2)
 mlp_10cv<-function(data,l1,l2,hiddenlayers,learnrate,iterations){
   RMSE=list()
   R2=list()
-  #data<-data[sample(nrow(data)),]
-  #folds<-cut(seq(1,nrow(data)),breaks=10,label=F)
+  r2<-0
   set.seed(1111)
-  fold10<-createFolds(Boston$crim,k=10,list=F)
+  fold10<-createFolds(data$crim,k=10,list=F)
   set.seed(123)
   for(i in 1:10){
     testindex<-which(fold10==i,arr.ind=T)
@@ -154,28 +153,36 @@ mlp_10cv<-function(data,l1,l2,hiddenlayers,learnrate,iterations){
     rss<-sum((pred-ytest)^2)
     tss<-sum((ytest-mean(ytest))^2)
     rsq<-1-rss/tss
-    R2[[i]]<-rsq
+    R2[[i]]=rsq
+    #select the predictive model with the highest r2
+    if(rsq >= r2){
+      finalmodel<<-mlp
+      r2<-rsq
+    }
   }
   #RMSE<-unlist(RMSE)
   #meanRMSE<-mean(RMSE)
-  print(unlist(R2))
+  #print(unlist(R2))
   #print(RMSE)
+  print(finalmodel)
+  print(r2)
+  print(R2)
 }
 
 #no regularisation
-set.seed(111)
-rmse_mlp<-mlp_10cv(Boston,0,0,2,0.01,75)
+r2_mlp<-mlp_10cv(training,0,0,2,0.01,75)
+finalpred_noreg<-predict(finalmodel,x_testing)
 #l1-lasso regularisation
-set.seed(222)
-rmse_l1_mlp<-mlp_10cv(Boston,1,0,2,0.01,75)
+r2_l1_mlp<-mlp_10cv(training,1,0,2,0.01,75)
+finalpred_l1<-predict(finalmodel,x_testing)
 #l2-ridge regularisation
 set.seed(333)
-rmse_l2_mlp<-mlp_10cv(Boston,0,1,1,0.01,75)
+r2_l2_mlp_l2<-mlp_10cv(training,0,1,1,0.01,75)
 #Elastic net
 set.seed(444)
-rmse_en_mlp<-mlp_10cv(Boston,1,1,1,0.01,75)
+r2_en_mlp<-mlp_10cv(training,1,1,1,0.01,75)
+finalpred_l3<-predict(finalmodel,x_testing)
 
-#this function adds 10-fold cv with MLP together, and we can check the RMSE for the test set.
 
 ####################support vector regression########
 #no-regularisation
