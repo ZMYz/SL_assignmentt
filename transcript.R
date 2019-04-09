@@ -120,28 +120,39 @@ dotplot(resamples,metric='RMSE')
 ####################Multiple Layer perceptron############
 install.packages("ANN2")
 library(ANN2)
+
 mlp_10cv<-function(data,l1,l2,hiddenlayers,learnrate,iterations){
-  score=list()
-  data<-data[sample(nrow(data)),]
-  folds<-cut(seq(1,nrow(data)),breaks=10,label=F)
+  RMSE=list()
+  R2=list()
+  #data<-data[sample(nrow(data)),]
+  #folds<-cut(seq(1,nrow(data)),breaks=10,label=F)
+  set.seed(1111)
+  fold10<-createFolds(Boston$crim,k=10,list=F)
+  set.seed(123)
   for(i in 1:10){
-    testindex<-which(folds==i,arr.ind=T)
+    testindex<-which(fold10==i,arr.ind=T)
     test<-data[testindex,]
     train<-data[-testindex,]
     ytrain<-train$crim
     xtrain<-model.matrix(crim~.,data=train)[,-1]
     ytest<-test$crim
     xtest<-model.matrix(crim~.,data=test)[,-1]
-    mlp_l1<-neuralnetwork(xtrain,ytrain,hidden.layers = hiddenlayers,regression=T,loss.type='squared',standardize = T,L1=l1,L2=l2,learn.rates=learnrate,verbose=F,val.prop=0.2,n.epochs = iterations)
-    mlp_l1_test<-predict(mlp_l1,xtest)
-    pred<-unlist(mlp_l1_test) #convert into vector
-    score[[i]]=RMSE(ytest,pred)
-
+    #split data
+    mlp<-neuralnetwork(xtrain,ytrain,hidden.layers = hiddenlayers,regression=T,loss.type='squared',standardize = T,L1=l1,L2=l2,learn.rates=learnrate,verbose=F,val.prop=0.2,n.epochs = iterations)
+    #train the model
+    mlp_test<-predict(mlp,xtest)
+    #prediction
+    pred<-unlist(mlp_test) #convert into vector
+    RMSE[[i]]=RMSE(ytest,pred)
+    rss<-sum((pred-ytest)^2)
+    tss<-sum((ytest-mean(ytest))^2)
+    rsq<-1-rss/tss
+    R2[[i]]<-rsq
   }
-  score<-unlist(score)
-  meanRMSE<-mean(score)
-  print(mean(score))
-  print(score)
+  #RMSE<-unlist(RMSE)
+  #meanRMSE<-mean(RMSE)
+  print(unlist(R2))
+  #print(RMSE)
 }
 
 #no regularisation
