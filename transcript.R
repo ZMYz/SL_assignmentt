@@ -26,6 +26,13 @@ dim(training)
 dim(testing)
 anyNA(Boston)
 
+r2<-function(actual,predict){
+  predict<-unlist(predict)
+  rss<-sum((predict-actual)^2)
+  tss<-sum((actual-mean(actual))^2)
+  rsq<-1-rss/tss
+}
+
 ###################regularization#####################
 install.packages("Matrix")
 library(Matrix)
