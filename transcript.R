@@ -140,7 +140,8 @@ mlp_10cv<-function(data,l1,l2,hiddenlayers,learnrate,iterations){
   }
   score<-unlist(score)
   meanRMSE<-mean(score)
-  return(mean(score))
+  print(mean(score))
+  print(score)
 }
 
 #no regularisation
@@ -171,6 +172,12 @@ rmse<-mean(svr_nr$resample$RMSE)
 
 #L2
 library(LiblineaR)
+
+y_training<-training$crim
+x_training<-as.matrix(training)[,-1]
+x_testing<-as.matrix(testing)[,-1]
+y_testing<-testing$crim
+
 svr<-LiblineaR(x_training, y_training,svr_eps=0.5,type=11,cross=0,verbose=T)
 pred_SVR<-predict(svr,newx = x_testing)
 
