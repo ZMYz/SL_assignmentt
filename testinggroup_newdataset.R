@@ -235,9 +235,56 @@ US_rmse_l2_mlp <- US_mlp_10cv(USFrame,0,1,1,0.01,75)
 set.seed(444)
 US_rmse_en_mlp <- US_mlp_10cv(Boston,1,1,1,0.01,75)
 
+##
+#US_finalmodel <- list(0)   ###not sure what does it mean?? 
+US_mlp_10cv<-function(data,l1,l2,hiddenlayers,learnrate,iterations){
+  #US_RMSE=list()
+  US_R2=list()
+  US_r2 <- 0
+  set.seed(1111)
+  fold10 <- createFolds(data$Unemployment,k=10,list=F)
+  set.seed(123)
+  for(i in 1:10){
+    testindex<-which(fold10==i,arr.ind=T)
+    test <- data[testindex,]
+    train <- data[-testindex,]
+    ytrain <- train$Unemployment
+    xtrain <- model.matrix(Unemployment~.,data = train)[,-34]
+    ytest <- test$Unemployment
+    xtest<- model.matrix(Unemployment~.,data = test)[,-34]
+    #split data
+    US_mlp <- neuralnetwork(xtrain, ytrain, 
+                            hidden.layers = hiddenlayers, 
+                            regression=T, loss.type='squared',
+                            standardize = T,
+                            L1 = l1, L2 = l2,
+                            learn.rates = learnrate,
+                            verbose=F, val.prop=0.2, 
+                            n.epochs = iterations)
+    #train the model
+    US_mlp_test <- predict(US_mlp,xtest)
+    #prediction
+    pred <- unlist(US_mlp_test) #convert into vector
+    #US_RMSE[[i]] = RMSE(ytest, pred)
+    rss <- sum((pred-ytest)^2)
+    tss <- sum((ytest-mean(ytest))^2)
+    rsq <- 1-rss/tss
+    US_R2[[i]]=rsq
+    #select the predictive model with the highest r2
+    if(rsq >= US_r2){
+      US_finalmodel <<- US_mlp
+      US_r2<-rsq
+    }
+  }
+  #RMSE<-unlist(RMSE)
+  #meanRMSE<-mean(RMSE)
+  #print(unlist(R2))
+  #print(RMSE)
+  print(US_finalmodel)
+  print(US_r2)
+  print(US_R2)
+}
 
-
-#this function adds 10-fold cv with MLP together, and we can check the RMSE for the test set.
 ####################support vector regression########
 #no-regularisation
 US_svr_nr<-train(Unemployment~.,
