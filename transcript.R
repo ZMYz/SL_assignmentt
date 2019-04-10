@@ -129,7 +129,7 @@ install.packages("ANN2")
 library(ANN2)
 
 mlp_10cv<-function(data,l1,l2,hiddenlayers,learnrate,iterations){
-  RMSE=list()
+  #RMSE=list()
   R2=list()
   r2<-0
   set.seed(1111)
@@ -148,8 +148,9 @@ mlp_10cv<-function(data,l1,l2,hiddenlayers,learnrate,iterations){
     #train the model
     mlp_test<-predict(mlp,xtest)
     #prediction
-    pred<-unlist(mlp_test) #convert into vector
-    RMSE[[i]]=RMSE(ytest,pred)
+    pred<-unlist(mlp_test) #convert into vector   
+    #RMSE[[i]]=RMSE(ytest,pred)
+    #r-squared calculation
     rss<-sum((pred-ytest)^2)
     tss<-sum((ytest-mean(ytest))^2)
     rsq<-1-rss/tss
@@ -172,6 +173,7 @@ mlp_10cv<-function(data,l1,l2,hiddenlayers,learnrate,iterations){
 #no regularisation
 r2_mlp<-mlp_10cv(training,0,0,2,0.01,75)
 finalpred_noreg<-predict(finalmodel,x_testing)
+
 #l1-lasso regularisation
 r2_l1_mlp<-mlp_10cv(training,1,0,2,0.01,75)
 finalpred_l1<-predict(finalmodel,x_testing)
