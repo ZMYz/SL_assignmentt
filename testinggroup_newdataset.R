@@ -175,22 +175,22 @@ install.packages("ANN2")
 library(ANN2)
 US_finalmodel <- list(0)
 US_mlp_10cv<-function(data,l1,l2,hiddenlayers,learnrate,iterations){
-  US_RMSE=list()
+  #US_RMSE=list()
   US_R2=list()
   US_r2 <- 0
   set.seed(1111)
   fold10 <- createFolds(data$Unemployment,k=10,list=F)
   set.seed(123)
   for(i in 1:10){
-    testindex<-which(fold10==i,arr.ind=T)
-    test <- data[testindex,]
-    train <- data[-testindex,]
-    ytrain <- US_training$Unemployment
-    xtrain <- model.matrix(Unemployment~.,data = US_training)[,-34]
-    ytest <- test$Unemployment
-    xtest<- model.matrix(Unemployment~.,data = US_testing)[,-34]
+    US_testindex<-which(fold10==i,arr.ind=T)
+    US_test <- data[US_testindex,]
+    US_train <- data[-US_testindex,]
+    US_ytrain <- US_train$Unemployment
+    US_xtrain <- model.matrix(Unemployment~.,data = US_train)[,-34]
+    US_ytest <- US_test$Unemployment
+    US_xtest<- model.matrix(Unemployment~.,data = US_test)[,-34]
     #split data
-    US_mlp <- neuralnetwork(xtrain, ytrain, 
+    US_mlp <- neuralnetwork(US_xtrain, US_ytrain, 
                          hidden.layers = hiddenlayers, 
                          regression=T, loss.type='squared',
                          standardize = T,
@@ -199,18 +199,18 @@ US_mlp_10cv<-function(data,l1,l2,hiddenlayers,learnrate,iterations){
                          verbose=F, val.prop=0.2, 
                          n.epochs = iterations)
     #train the model
-    US_mlp_test <- predict(US_mlp,xtest)
+    US_mlp_test <- predict(US_mlp,US_xtest)
     #prediction
-    pred <- unlist(US_mlp_test) #convert into vector
-    US_RMSE[[i]] = RMSE(ytest, pred)
-    rss <- sum((pred-ytest)^2)
-    tss <- sum((ytest-mean(ytest))^2)
-    rsq <- 1-rss/tss
-    US_R2[[i]]=rsq
+    US_pred <- unlist(US_mlp_test) #convert into vector
+    #US_RMSE[[i]] = RMSE(US_ytest, US_pred)
+    US_rss <- sum((US_pred - US_ytest)^2)
+    US_tss <- sum((US_ytest - mean(US_ytest))^2)
+    US_rsq <- 1-US_rss/US_tss
+    US_R2[i] <- US_rsq
     #select the predictive model with the highest r2
-    if(rsq >= US_r2){
+    if(US_rsq >= US_r2){
       US_finalmodel <<- US_mlp
-      US_r2<-rsq
+      US_r2<-US_rsq
     }
   }
   #RMSE<-unlist(RMSE)
@@ -221,19 +221,21 @@ US_mlp_10cv<-function(data,l1,l2,hiddenlayers,learnrate,iterations){
   print(US_r2)
   print(US_R2)
 }
-
+US_mlp
+anyNA(USFrame)
 #no regularisation
 set.seed(111)
-US_rmse_mlp <- US_mlp_10cv(USFrame,0,0,2,0.01,75)
+US_rmse_mlp <- US_mlp_10cv(US_training,0,0,2,0.01,75)
 #l1-lasso regularisation
 set.seed(222)
-US_rmse_l1_mlp <- US_mlp_10cv(USFrame,1,0,2,0.01,75)
+US_rmse_l1_mlp <- US_mlp_10cv(US_training,1,0,2,0.01,75)
 #l2-ridge regularisation
 set.seed(333)
-US_rmse_l2_mlp <- US_mlp_10cv(USFrame,0,1,1,0.01,75)
+US_rmse_l2_mlp <- US_mlp_10cv(US_training,0,1,1,0.01,75)
 #Elastic net
 set.seed(444)
-US_rmse_en_mlp <- US_mlp_10cv(Boston,1,1,1,0.01,75)
+US_rmse_en_mlp <- US_mlp_10cv(US_training,1,1,1,0.01,75)
+
 
 ##
 #US_finalmodel <- list(0)   ###not sure what does it mean?? 
