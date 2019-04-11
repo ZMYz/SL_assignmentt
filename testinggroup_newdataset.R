@@ -258,6 +258,8 @@ US_mlp_10cv<-function(data,l1,l2,hiddenlayers,learnrate,iterations){
     US_mlp <- neuralnetwork(xtrain, ytrain, 
                             hidden.layers = hiddenlayers, 
                             regression=T, loss.type='squared',
+                            activ.functions = 'relu',
+                            batch.size = 40,
                             standardize = T,
                             L1 = l1, L2 = l2,
                             learn.rates = learnrate,
