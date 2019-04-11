@@ -301,19 +301,28 @@ summary(US_svr_nr_test)
 #L2
 library(LiblineaR)
 
-US_y_training<-US_training$Unemployment
-US_x_training<-as.matrix(US_training)[,-34]
-US_x_testing<-as.matrix(US_testing)[,-34]
-US_y_testing<-US_testing$Unemployment
-dim(US_x_testing)
-dim(US_x_training)
+US_svr_l2<-train(Unemployment~.,
+                 data = US_training,
+                 method='svmLinear3',
+                 preProcess = c('center','scale'),
+                 trControl = US_myControl2)
+US_svr_l2_test <- predict(US_svr_l2, US_testing)
+US_rmse<-mean(US_svr_l2$resample$RMSE)
+summary(US_svr_l2_test)
+
+#US_y_training<-US_training$Unemployment
+#US_x_training<-as.matrix(US_training)[,-34]
+#US_x_testing<-as.matrix(US_testing)[,-34]
+#!US_y_testing<-US_testing$Unemployment
+#dim(US_x_testing)
+#dim(US_x_training)
 
 
-US_svr <- LiblineaR(US_x_training, US_y_training,svr_eps=0.5,type=11,cross=0,verbose=T)
-US_pred_SVR<-predict(US_svr,newx = US_x_testing)
+#US_svr <- LiblineaR(US_x_training, US_y_training,svr_eps=0.5,type=11,cross=0,verbose=T)
+#US_pred_SVR<-predict(US_svr,newx = US_x_testing)
 
-US_svr_mse<-LiblineaR(US_x_training, US_y_training,svr_eps=0.5,type=11,cross=10,verbose=T)
-US_rmse_l2_svr<-sqrt(US_svr_mse)            #  ??? does it right?
+#US_svr_mse<-LiblineaR(US_x_training, US_y_training,svr_eps=0.5,type=11,cross=10,verbose=T)
+#US_rmse_l2_svr<-sqrt(US_svr_mse)            #  ??? does it right?
 
 #check the average RMSE of different techniques
 Performance<-matrix(data=c(US_RMSE_lm,US_RMSE_lasso,US_RMSE_ridge,RMSE_Eln,rmse_svr_nr,rmse_l2_svr,rmse_mlp,rmse_l1_mlp,rmse_l2_mlp,rmse_en_mlp),ncol=1)
