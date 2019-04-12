@@ -409,9 +409,7 @@ postResample(pred = US_svr_pred_df$ridge, obs = US_svr_pred_df$actual)
 US_svm_nr <- postResample(pred = US_svr_pred_df$lm, obs = US_svr_pred_df$actual)
 US_svm_l2 <- postResample(pred = US_svr_pred_df$ridge, obs = US_svr_pred_df$actual)
 
-
 ####################Multiple Layer perceptron############
-
 install.packages('BBmisc')
 library(BBmisc)
 scaledUSframe<-normalize(USFrame,method='scale',range=c(0,60))
@@ -474,7 +472,7 @@ US_rmse_mlp <- US_mlp_10cv(US_training2,0,0,c(23,15),0.01,100)
 US_noreg_mlp_model <- US_finalmodel
 US_MLP_NR_RMSE <- B_rmse
 US_finalpred_noreg<-predict(US_noreg_mlp_model,US_xtest2)
-postResample(pred=US_finalpred_noreg$predictions, obs = US_ytest2)
+
 
 
 #l1-lasso regularisation
@@ -483,7 +481,7 @@ US_rmse_l1_mlp <- US_mlp_10cv(US_training2,1,0,c(23,15),0.01,100)
 US_l1_mlp_model <- US_finalmodel
 US_MLP_L1_RMSE <- B_rmse
 US_finalpred_l1<-predict(US_l1_mlp_model,US_xtest2)
-postResample(pred=US_finalpred_l1$predictions, obs = US_ytest2)
+
 
 #l2-ridge regularisation
 set.seed(333)
@@ -491,7 +489,7 @@ US_rmse_l2_mlp <- US_mlp_10cv(US_training2,0,1,c(23,15),0.01,100)
 US_l2_mlp_model <- US_finalmodel
 US_MLP_L2_RMSE <- B_rmse
 US_finalpred_l2 <- predict(US_l2_mlp_model,US_xtest2)
-postResample(pred=US_finalpred_l2$predictions, obs = US_ytest2)
+
 
 #Elastic net
 set.seed(444)
@@ -499,7 +497,7 @@ US_rmse_en_mlp <- US_mlp_10cv(US_training2,1,1,c(23,15),0.01,100)
 US_en_mlp_model <- US_finalmodel
 US_MLP_EN_RMSE <- B_rmse
 US_finalpred_l3<-predict(US_en_mlp_model,US_xtest2)
-postResample(pred=US_finalpred_l3$predictions, obs = US_ytest2)
+
 
 # Plotting the training Models for MLP
 plot(US_noreg_mlp_model)
@@ -510,7 +508,7 @@ plot(US_en_mlp_model)
 
 ################ MLP Plotting and Analysis ########################
 
-US_mlp_pred_list <- list(actual = US_testing$Unemployment, 
+US_mlp_pred_list <- list(actual = US_ytest2, 
                          ridge = US_finalpred_l2$predictions[,1], 
                          lasso = US_finalpred_l1$predictions[,1], 
                          ElasticNet = US_finalpred_l3$predictions[,1], 
@@ -522,9 +520,9 @@ US_mlp_cor_accuracy <- cor(US_mlp_pred_df)
 US_mlp_cor_accuracy[1,]
 
 US_sort_mlp_pred_df <- US_mlp_pred_df[order(US_mlp_pred_df$actual),]
-US_sort_mlp <- cbind(US_sort_mlp_pred_df, ID = 1:nrow(US_testing))
+US_sort_mlp <- cbind(US_sort_mlp_pred_df, ID = 1:nrow(US_testing2))
 
-US_mlp_id <- cbind(US_mlp_pred_df, ID = 1:nrow(US_testing))
+US_mlp_id <- cbind(US_mlp_pred_df, ID = 1:nrow(US_testing2))
 
 # Plotting the four comparison plots of Actual versus predicted
 ggplot(US_mlp_id, aes(x = ID, y = actual)) +
@@ -557,15 +555,15 @@ ggplot(US_mlp_id, aes(x = ID, y = actual)) +
   theme_bw()
 
 # Accuracy of the prediction versus actual
-postResample(pred = US_mlp_pred_df$lm, obs = US_mlp_pred_df$actual)
-postResample(pred = US_mlp_pred_df$lasso, obs = US_mlp_pred_df$actual)
-postResample(pred = US_mlp_pred_df$ridge, obs = US_mlp_pred_df$actual)
-postResample(pred = US_mlp_pred_df$ElasticNet, obs = US_mlp_pred_df$actual)
+postResample(pred = US_mlp_pred_df$lm, obs = US_ytest2)
+postResample(pred = US_mlp_pred_df$lasso, obs = US_ytest2)
+postResample(pred = US_mlp_pred_df$ridge, obs = US_ytest2)
+postResample(pred = US_mlp_pred_df$ElasticNet, obs = US_ytest2)
 
-US_mlp_nr <- postResample(pred = US_mlp_pred_df$lm, obs = US_mlp_pred_df$actual)
-US_mlp_l1 <- postResample(pred = US_mlp_pred_df$lasso, obs = US_mlp_pred_df$actual)
-US_mlp_l2 <- postResample(pred = US_mlp_pred_df$ridge, obs = US_mlp_pred_df$actual)
-US_mlp_EN <- postResample(pred = US_mlp_pred_df$ElasticNet, obs = US_mlp_pred_df$actual)
+US_mlp_nr <- postResample(pred = US_mlp_pred_df$lm, obs = US_ytest2)
+US_mlp_l1 <- postResample(pred = US_mlp_pred_df$lasso, obs = US_ytest2)
+US_mlp_l2 <- postResample(pred = US_mlp_pred_df$ridge, obs = US_ytest2)
+US_mlp_EN <- postResample(pred = US_mlp_pred_df$ElasticNet, obs = US_ytest2)
 
 ######## Overall Comparison of Models #######
 #check the average RMSE of different techniques
