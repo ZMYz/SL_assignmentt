@@ -409,18 +409,27 @@ postResample(pred = US_svr_pred_df$ridge, obs = US_svr_pred_df$actual)
 US_svm_nr <- postResample(pred = US_svr_pred_df$lm, obs = US_svr_pred_df$actual)
 US_svm_l2 <- postResample(pred = US_svr_pred_df$ridge, obs = US_svr_pred_df$actual)
 
-
 ####################Multiple Layer perceptron############
+install.packages('BBmisc')
+library(BBmisc)
+scaledUSframe<-normalize(USFrame,method='scale',range=c(0,60))
+
+US_training2 <- data.frame(scaledUSframe[intrain, ])
+US_testing2 <- data.frame(scaledUSframe[-intrain, ])
+
+US_ytrain2 <- US_training2$Unemployment
+US_xtrain2 <- model.matrix(Unemployment~.,data = US_training2)[,-34]
+US_ytest2 <- US_testing2$Unemployment
+US_xtest2<- model.matrix(Unemployment~.,data = US_testing2)[,-34]
 
 install.packages("ANN2")
 library(ANN2)
-set.seed(12)
-fold10 <- createFolds(US_training$Unemployment,k=10,list=F)
+fold10 <- createFolds(US_training2$Unemployment,k=10,list=F)
 
 US_mlp_10cv<-function(data,l1,l2,hiddenlayers,learnrate,iterations){
   #US_RMSE=list()
   US_R2=list()
-  rmse_val <- 50000
+  rmse_val <- 5000000
   set.seed(123)
   for(i in 1:10){
     US_testindex<-which(fold10==i,arr.ind=T)
@@ -432,14 +441,14 @@ US_mlp_10cv<-function(data,l1,l2,hiddenlayers,learnrate,iterations){
     US_xtest<- model.matrix(Unemployment~.,data = US_test)[,-34]
     #split data
     US_mlp <- neuralnetwork(US_xtrain, US_ytrain, 
-                         hidden.layers = hiddenlayers, 
-                         regression=T, loss.type='squared',
-                         activ.functions = "relu", random.seed = 5,batch.size = 300,   # don't set batch.size too small
-                         standardize = T,
-                         L1 = l1, L2 = l2,
-                         learn.rates = learnrate,
-                         verbose=F, val.prop=0.2, 
-                         n.epochs = iterations)
+                            hidden.layers = hiddenlayers, 
+                            regression=T, loss.type='squared',
+                            activ.functions = "relu", random.seed = 5,batch.size = 500,   # don't set batch.size too small
+                            standardize = F,
+                            L1 = l1, L2 = l2,
+                            learn.rates = learnrate,
+                            verbose=F, val.prop=0.2, 
+                            n.epochs = iterations)
     #train the model
     US_mlp_test <- predict(US_mlp,US_xtest)
     #prediction
@@ -459,37 +468,36 @@ US_mlp_10cv<-function(data,l1,l2,hiddenlayers,learnrate,iterations){
 
 #no regularisation
 set.seed(111)
-US_rmse_mlp <- US_mlp_10cv(US_training,0,0,c(23,14),0.1,100)
+US_rmse_mlp <- US_mlp_10cv(US_training2,0,0,c(23,15),0.01,100)
 US_noreg_mlp_model <- US_finalmodel
 US_MLP_NR_RMSE <- B_rmse
-plot(US_noreg_mlp_model)
-US_finalpred_noreg<-predict(US_noreg_mlp_model,US_x_testing)
-US_finalpred_noreg
+US_finalpred_noreg<-predict(US_noreg_mlp_model,US_xtest2)
+
+
 
 #l1-lasso regularisation
 set.seed(222)
-US_rmse_l1_mlp <- US_mlp_10cv(US_training,1,0,2,0.01,100)
+US_rmse_l1_mlp <- US_mlp_10cv(US_training2,1,0,c(23,15),0.01,100)
 US_l1_mlp_model <- US_finalmodel
 US_MLP_L1_RMSE <- B_rmse
-plot(US_l1_mlp_model)
-US_finalpred_l1<-predict(US_l1_mlp_model,US_x_testing)
+US_finalpred_l1<-predict(US_l1_mlp_model,US_xtest2)
 
 
 #l2-ridge regularisation
 set.seed(333)
-US_rmse_l2_mlp <- US_mlp_10cv(US_training,0,1,1,0.01,100)
+US_rmse_l2_mlp <- US_mlp_10cv(US_training2,0,1,c(23,15),0.01,100)
 US_l2_mlp_model <- US_finalmodel
 US_MLP_L2_RMSE <- B_rmse
-plot(US_l2_mlp_model)
-US_finalpred_l2 <- predict(US_l2_mlp_model,US_x_testing)
+US_finalpred_l2 <- predict(US_l2_mlp_model,US_xtest2)
+
 
 #Elastic net
 set.seed(444)
-US_rmse_en_mlp <- US_mlp_10cv(US_training,1,1,1,0.01,100)
+US_rmse_en_mlp <- US_mlp_10cv(US_training2,1,1,c(23,15),0.01,100)
 US_en_mlp_model <- US_finalmodel
 US_MLP_EN_RMSE <- B_rmse
-plot(US_en_mlp_model)
-US_finalpred_l3<-predict(US_en_mlp_model,US_x_testing)
+US_finalpred_l3<-predict(US_en_mlp_model,US_xtest2)
+
 
 # Plotting the training Models for MLP
 plot(US_noreg_mlp_model)
@@ -500,7 +508,7 @@ plot(US_en_mlp_model)
 
 ################ MLP Plotting and Analysis ########################
 
-US_mlp_pred_list <- list(actual = US_testing$Unemployment, 
+US_mlp_pred_list <- list(actual = US_ytest2, 
                          ridge = US_finalpred_l2$predictions[,1], 
                          lasso = US_finalpred_l1$predictions[,1], 
                          ElasticNet = US_finalpred_l3$predictions[,1], 
@@ -512,9 +520,9 @@ US_mlp_cor_accuracy <- cor(US_mlp_pred_df)
 US_mlp_cor_accuracy[1,]
 
 US_sort_mlp_pred_df <- US_mlp_pred_df[order(US_mlp_pred_df$actual),]
-US_sort_mlp <- cbind(US_sort_mlp_pred_df, ID = 1:nrow(US_testing))
+US_sort_mlp <- cbind(US_sort_mlp_pred_df, ID = 1:nrow(US_testing2))
 
-US_mlp_id <- cbind(US_lm_pred_df, ID = 1:nrow(US_testing))
+US_mlp_id <- cbind(US_mlp_pred_df, ID = 1:nrow(US_testing2))
 
 # Plotting the four comparison plots of Actual versus predicted
 ggplot(US_mlp_id, aes(x = ID, y = actual)) +
@@ -547,15 +555,16 @@ ggplot(US_mlp_id, aes(x = ID, y = actual)) +
   theme_bw()
 
 # Accuracy of the prediction versus actual
-postResample(pred = US_mlp_pred_df$lm, obs = US_mlp_pred_df$actual)
-postResample(pred = US_mlp_pred_df$lasso, obs = US_mlp_pred_df$actual)
-postResample(pred = US_mlp_pred_df$ridge, obs = US_mlp_pred_df$actual)
-postResample(pred = US_mlp_pred_df$ElasticNet, obs = US_mlp_pred_df$actual)
+postResample(pred = US_mlp_pred_df$lm, obs = US_ytest2)
+postResample(pred = US_mlp_pred_df$lasso, obs = US_ytest2)
+postResample(pred = US_mlp_pred_df$ridge, obs = US_ytest2)
+postResample(pred = US_mlp_pred_df$ElasticNet, obs = US_ytest2)
 
-US_mlp_nr <- postResample(pred = US_mlp_pred_df$lm, obs = US_mlp_pred_df$actual)
-US_mlp_l1 <- postResample(pred = US_mlp_pred_df$lasso, obs = US_mlp_pred_df$actual)
-US_mlp_l2 <- postResample(pred = US_mlp_pred_df$ridge, obs = US_mlp_pred_df$actual)
-US_mlp_EN <- postResample(pred = US_mlp_pred_df$ElasticNet, obs = US_mlp_pred_df$actual)
+US_mlp_nr <- postResample(pred = US_mlp_pred_df$lm, obs = US_ytest2)
+US_mlp_l1 <- postResample(pred = US_mlp_pred_df$lasso, obs = US_ytest2)
+US_mlp_l2 <- postResample(pred = US_mlp_pred_df$ridge, obs = US_ytest2)
+US_mlp_EN <- postResample(pred = US_mlp_pred_df$ElasticNet, obs = US_ytest2)
+
 
 ######## Overall Comparison of Models #######
 #check the average RMSE of different techniques
