@@ -19,10 +19,9 @@ library(corrplot)
 library(e1071)
 
 
-
 # set work directory to the right place that include the dataset
-US <- read.csv("D:/Learning/Statistical learning/Assignment/2/acs2017_county_data.csv",
-    header = TRUE)                 
+US <- read.csv("C:/Users/apple/Downloads/us-census-demographic-data/acs2017_county_data.csv",
+               header = TRUE)                 
 
 # remove missing value line, there is just 1 missing value 
 US <- US[complete.cases(US),]
@@ -48,17 +47,17 @@ US_myControl2<-trainControl(method='cv',number=10,verboseIter = F)
 #set control for training process with 10 times 10-folds cross-validation
 set.seed(2)
 US_myControl <- trainControl(method = 'repeatedcv',
-                            number = 10,
-                            repeats = 10,
-                            verboseIter = T)
+                             number = 10,
+                             repeats = 10,
+                             verboseIter = T)
 
 USFrame <- data.frame(USMatrix)
 anyNA(USFrame)
 
 set.seed(1)
 intrain <- createDataPartition(y = USFrame$Unemployment,
-                              p = 0.8,
-                              list = FALSE)
+                               p = 0.8,
+                               list = FALSE)
 US_training <- USFrame[intrain, ]
 US_testing <- USFrame[-intrain, ]
 dim(US_training)
@@ -66,13 +65,17 @@ dim(US_testing)
 
 head(US_training)
 
+US_y_training<- US_training$Unemployment
+US_x_training<-as.matrix(US_training)[,-34]
+US_x_testing<-as.matrix(US_testing)[,-34]
+US_y_testing<-US_testing$Unemployment
 #linear regression
 set.seed(5)
 US_lm <- train(Unemployment ~ .,
-              US_training,
-              method = 'lm',
-              preProcess = c('center', 'scale'),
-              trControl = US_myControl2)
+               US_training,
+               method = 'lm',
+               preProcess = c('center', 'scale'),
+               trControl = US_myControl2)
 # appear warning because of using too many predictors for the lm function
 summary(US_lm)
 
@@ -106,11 +109,11 @@ plot(varImp(US_ridge), main = "importance of variables in ridge regularized line
 ###remove insignificant predictors and rerun the model, and compare
 set.seed(3)
 US_ridge2 <- train(Unemployment ~ . - Carpool - Women - TotalPop - IncomePerCapErr - Men - Asian - Production,
-                  data = US_training,
-                  method = 'glmnet',
-                  preProcess = c('center', 'scale'),
-                  tuneGrid = US_myGrid,
-                  trControl = US_myControl2)
+                   data = US_training,
+                   method = 'glmnet',
+                   preProcess = c('center', 'scale'),
+                   tuneGrid = US_myGrid,
+                   trControl = US_myControl2)
 US_ridge_test2 <- predict(US_ridge, newdata = US_testing)
 
 US_ridge2
@@ -127,7 +130,7 @@ US_lasso <- train(Unemployment ~ .,
                   preProcess = c('center', 'scale'),
                   tuneGrid = US_myGrid2,
                   trControl = US_myControl2)
-  # alpha = 1, lambda = 1e-04
+# alpha = 1, lambda = 1e-04
 US_lasso_test <- predict(US_lasso, US_testing)
 US_lasso
 plot(US_lasso)
@@ -170,6 +173,7 @@ bwplot(US_resamp, metric="RMSE")
 bwplot(US_EN_Samp$RMSE)
 
 dotplot(US_resamp, metric='RMSE')
+
 dotplot(US_EN_Samp$RMSE)
 
 # Looking at the R-squared
@@ -187,9 +191,9 @@ US_Grouped_EN_Samp <- aggregate(x=US_EN_Samp[,1:3], by = list(US_index), FUN=mea
 
 #Group_R2 <- data.frame(Ridge = resamp$values$`ridge~Rsquared`, Lasso = resamp$values$`lasso~Rsquared`, ElasticNet = Grouped_EN_Samp$Rsquared, LM = resamp$values$`lm~Rsquared`)
 US_Group_R2 <- data.frame(Ridge = US_resamp$values$`US_ridge~RMSE`, 
-                       Lasso = US_resamp$values$`US_lasso~RMSE`, 
-                       ElasticNet = US_Grouped_EN_Samp$RMSE, 
-                       LM = US_resamp$values$`US_lm~RMSE`)
+                          Lasso = US_resamp$values$`US_lasso~RMSE`, 
+                          ElasticNet = US_Grouped_EN_Samp$RMSE, 
+                          LM = US_resamp$values$`US_lm~RMSE`)
 US_GR2 <- cbind(US_Group_R2, ID = rownames(US_Group_R2))
 
 summary(US_Group_R2)
@@ -282,7 +286,7 @@ US_slpd <- cbind(US_sort_lm_pred_df, ID = 1:nrow(US_testing))
 US_lmpd <- cbind(US_lm_pred_df, ID = 1:nrow(US_testing))
 
 # Plotting the four comparison plots of Actual versus predicted
-  # no regularization
+# no regularization
 ggplot(US_lmpd, aes(x = ID, y = actual)) +
   #geom_smooth(method = "lm", se = FALSE, color = "lightgrey") + # Add the regression line
   geom_segment(aes(xend = ID, yend = lm), alpha = .2) +  # Lines to connect points
@@ -290,21 +294,21 @@ ggplot(US_lmpd, aes(x = ID, y = actual)) +
   geom_point(aes(y = lm), shape = 1) +  # Points of predicted values
   ggtitle("No Regularisation") +
   theme_bw()
-  # lasso
+# lasso
 ggplot(US_lmpd, aes(x = ID, y = actual)) +
   geom_segment(aes(xend = ID, yend = lasso), alpha = .2) +  # Lines to connect points
   geom_point() +  # Points of actual values
   geom_point(aes(y = lasso), shape = 1) +  # Points of predicted values
   ggtitle("Lasso") +
   theme_bw()
-  # ridge
+# ridge
 ggplot(US_lmpd, aes(x = ID, y = actual)) +
   geom_segment(aes(xend = ID, yend = ridge), alpha = .2) +  # Lines to connect points
   geom_point() +  # Points of actual values
   geom_point(aes(y = ridge), shape = 1) +  # Points of predicted values
   ggtitle("Ridge") +
   theme_bw()
-  #Elastic net
+#Elastic net
 ggplot(US_lmpd, aes(x = ID, y = actual)) +
   geom_segment(aes(xend = ID, yend = ElasticNet), alpha = .2) +  # Lines to connect points
   geom_point() +  # Points of actual values
@@ -325,10 +329,6 @@ US_reg_EN
 
 ####################support vector regression########
 
-US_y_training<- US_training$Unemployment
-US_x_training<-as.matrix(US_training)[,-34]
-US_x_testing<-as.matrix(US_testing)[,-34]
-US_y_testing<-US_testing$Unemployment
 
 #no-regularisation
 set.seed(142)
@@ -409,9 +409,11 @@ postResample(pred = US_svr_pred_df$ridge, obs = US_svr_pred_df$actual)
 US_svm_nr <- postResample(pred = US_svr_pred_df$lm, obs = US_svr_pred_df$actual)
 US_svm_l2 <- postResample(pred = US_svr_pred_df$ridge, obs = US_svr_pred_df$actual)
 
-####################Multiple Layer perceptron############
+####################MultiLayer perceptron############
 install.packages('BBmisc')
 library(BBmisc)
+
+set.seed(4343)
 scaledUSframe<-normalize(USFrame,method='scale',range=c(0,60))
 
 US_training2 <- data.frame(scaledUSframe[intrain, ])
@@ -590,17 +592,17 @@ US_MLP_L2_RMSE
 US_MLP_EN_RMSE
 
 US_Performance<-matrix(data=c(US_RMSE_lm,US_RMSE_lasso,
-                           US_RMSE_ridge,US_RMSE_Eln,
-                           US_rmse_svr_nr,
-                           US_rmse_l2_svr,
-                           US_MLP_NR_RMSE,
-                           US_MLP_L1_RMSE,
-                           US_MLP_L2_RMSE,
-                           US_MLP_EN_RMSE),ncol=1)
+                              US_RMSE_ridge,US_RMSE_Eln,
+                              US_rmse_svr_nr,
+                              US_rmse_l2_svr,
+                              US_MLP_NR_RMSE,
+                              US_MLP_L1_RMSE,
+                              US_MLP_L2_RMSE,
+                              US_MLP_EN_RMSE),ncol=1)
 rownames(US_Performance)<-c('LinearRegres','LinearLasso',
-                         'LinearRidge','LinearElastic',
-                         'SVM','SVMl2','MLP','MLPl1','MLPl2',
-                         'MLPElastic')
+                            'LinearRidge','LinearElastic',
+                            'SVM','SVMl2','MLP','MLPl1','MLPl2',
+                            'MLPElastic')
 colnames(US_Performance)<-c('RMSE')
 US_Performance
 
