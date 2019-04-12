@@ -23,6 +23,12 @@ intrain<-createDataPartition(y=Boston$crim,p=0.8,list=FALSE)
 training<-Boston[intrain,]
 testing<-Boston[-intrain,]
 
+
+y_training<-training$crim
+x_training<-as.matrix(training)[,-1]
+x_testing<-as.matrix(testing)[,-1]
+y_testing<-testing$crim
+
 # Checking the number of variables in both the training and test datasets
 dim(training)
 dim(testing)
@@ -333,10 +339,6 @@ abline(a=0,b=1)
 #################L2 SVM#######################
 library(LiblineaR)
 
-y_training<-training$crim
-x_training<-as.matrix(training)[,-1]
-x_testing<-as.matrix(testing)[,-1]
-y_testing<-testing$crim
 
 set.seed(432)
 svr_l2<-train(crim~.,
