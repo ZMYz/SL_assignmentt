@@ -1,8 +1,7 @@
 # switch the working directory before runing the code
 
 #load packages
-install.packages("MASS")
-install.packages("ISLR")
+
 install.packages("lattice")
 install.packages("caret")
 install.packages("kernlab")
@@ -12,8 +11,6 @@ install.packages('ggplot2')
 install.packages("kernlab")
 install.packages("Matrix")
 
-library(MASS)
-library(ISLR)
 library(ggplot2)
 library(lattice)
 library(caret)
